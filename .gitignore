@@ -361,3 +361,47 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# --- Sensitive credentials and user keys ---
+# Environment files
+.env
+.env.*
+
+# Secrets files produced by dotnet user-secrets or other tools
+secrets.json
+secrets.*
+secrets/
+*.secret
+
+# Credential files
+credentials.json
+credentials/
+*.credentials
+
+# Tokens / authentication
+token*
+*.token
+
+# App configuration files that may contain credentials (local overrides)
+appsettings.*.json
+appsettings.*.local.json
+
+# Certificate and key files
+*.pfx
+*.p12
+*.pem
+*.key
+*.cer
+
+# SSH keys
+id_rsa
+id_*.pub
+
+# Azure / cloud auth files
+azureauth
+*.publishsettings
+
+# Keep example/template configs tracked, ignore real ones
+!appsettings.example.json
+# Local appsettings that may contain secrets
+appsettings.Local.json
