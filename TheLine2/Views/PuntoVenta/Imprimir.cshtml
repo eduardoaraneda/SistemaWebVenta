@@ -1,0 +1,28 @@
+﻿@using Application.ViewModel.PuntoVenta
+@model DocumentoImpresionVM
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Imprimir Documento</title>
+</head>
+<body>
+
+    @{
+        // Si más adelante agregas FACTURA / NC
+        if (Model.Tipo == "BLV")
+        {
+            @Html.Partial("Boleta", Model)
+        }
+        else
+        {
+            <div>Tipo de documento no soportado</div>
+        }
+    }
+
+</body>
+</html>

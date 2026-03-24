@@ -1,0 +1,31 @@
+﻿@model IEnumerable<Domain.Entidades.Menu>
+
+<div class="accordion accordion-flush" id="accordionSidebar">
+    @foreach (var menu in Model)
+    {
+        var collapseId = "collapse-" + menu.Id;
+
+        <div class="accordion-item bg-transparent border-0">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-transparent text-white shadow-none nav-link-sidebar py-3"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId">
+                    <i class="@menu.IconoMenu me-3 fs-5 text-primary"></i>
+                    <span class="sidebar-text">@menu.Descripcion</span>
+                </button>
+            </h2>
+            <div id="@collapseId" class="accordion-collapse collapse" data-bs-parent="#accordionSidebar">
+                <div class="accordion-body p-0 sidebar-submenu">
+                    @foreach (var sub in menu.SubMenus)
+                    {
+                        <a class="nav-link-sidebar ps-5 small py-2"
+                           asp-controller="@sub.Controller"
+                           asp-action="@sub.Action">
+                            <i class="@sub.IconoSubMenu me-2 opacity-50"></i>
+                            <span class="sidebar-text">@sub.Descripcion</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

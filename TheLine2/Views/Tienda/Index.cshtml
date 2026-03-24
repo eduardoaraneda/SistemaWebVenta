@@ -1,0 +1,340 @@
+﻿@using Web.Models
+@model GestionTiendasViewModel
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-shop me-2"></i> Gestión de Tiendas</h4>
+            <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalTienda()">
+                <i class="bi bi-plus-circle me-1"></i> Nueva Tienda
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="tablaTiendas">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cód.</th>
+                            <th>Descripción</th>
+                            <th>Ciudad</th>
+                            <th>Direccion</th>
+                            <th>Codigo Nike</th>
+                            <th>Codigo Talana</th>
+                            <th>Habilitado Ecommerce</th>
+                            <th>Teléfono</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Tiendas)
+                        {
+                            <tr>
+                                <td>@item.Codigo_Numerico</td>
+                                <td><strong>@item.Descripcion</strong></td>
+                                <td>@item.Ciudad</td>
+                                <td>@item.Direccion</td>
+                                <td>@item.CodigoNike</td>
+                                <td>@item.Talana</td>
+                                <td>
+                                    @if (item.Ecommerce == "ECO" || item.Ecommerce == "HIT")
+                                    {
+                                        <span class="badge bg-success">Sí</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">No</span>
+                                    }
+                                </td>
+                                <td>@item.Telefono</td>
+                                <td>
+                                    <span class="badge @(item.Estado == "A" ? "bg-success" : "bg-danger")">
+                                        @(item.Estado == "V" ? "Activo" : "Inactivo")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editarTienda('@item.Cod_Tienda')">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalTienda" tabindex="-1" aria-labelledby="modalTiendaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalTiendaLabel">Configuración de Tienda</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formTienda">
+                    <input type="hidden" id="Cod_Tienda" name="Cod_Tienda" />
+
+                    <ul class="nav nav-tabs mb-3" id="tiendaTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">Datos Generales</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config" type="button" role="tab">Configuraciones</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="sii-tab" data-bs-toggle="tab" data-bs-target="#sii" type="button" role="tab">Datos SII</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="tiendaTabsContent">
+                        <div class="tab-pane fade show active" id="general" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label">Descripción / Nombre</label>
+                                    <input type="text" class="form-control" name="Descripcion" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Cód. Numérico</label>
+                                    <input type="number" class="form-control" name="Codigo_Numerico" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Dirección</label>
+                                    <input type="text" class="form-control" name="Direccion" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Ciudad</label>
+                                    <input type="text" class="form-control" name="Ciudad" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Región (ID)</label>
+                                    <input type="number" class="form-control" name="Region">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Estado</label>
+                                    <select class="form-select" name="Estado">
+                                        <option value="V">Activo</option>
+                                        <option value="B">Inactivo</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="text" class="form-control" name="Telefono">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" name="Mail">
+                                </div>
+                                <div class="col-md-6">
+                                     <label class="form-label">Empresa</label>
+                                     <select class="form-select" name="Cod_Empresa">
+                                        <option value="">-- Seleccione Empresa --</option>
+                                        @foreach (var emp in Model.Empresas)
+                                        {
+                                            <option value="@emp.Cod_Empresa">@emp.Descripcion</option>
+                                        }
+                                     </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="config" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Codigo Nike</label>
+                                    <input type="text" class="form-control" name="CodigoNike">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Cód. Comercio (Tbk)</label>
+                                    <input type="text" class="form-control" name="Codigo_Comercio">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Código Talana</label>
+                                    <input type="text" class="form-control" name="Talana">
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch mt-4">
+                                        <input class="form-check-input" type="checkbox" name="ValidaStock" value="true">
+                                        <label class="form-check-label">Validar Stock</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch mt-4">
+                                        <input class="form-check-input" type="checkbox" name="BoletaElec" value="true">
+                                        <label class="form-check-label">Boleta Electrónica</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="sii" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Sucursal SII</label>
+                                    <input type="number" class="form-control" name="SucursalSii">
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">Dirección SII</label>
+                                    <input type="text" class="form-control" name="DireccionSii">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Comuna SII</label>
+                                    <input type="text" class="form-control" name="ComunaSii">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Ciudad SII</label>
+                                    <input type="text" class="form-control" name="CiudadSii">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Region SII</label>
+                                    <input type="text" class="form-control" name="RegionSii">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarTienda">Guardar Tienda</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* 1. Librerías de DataTables *@
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // 2. Inicialización de DataTables
+            if ($.fn.DataTable.isDataTable('#tablaTiendas')) {
+                $('#tablaTiendas').DataTable().destroy();
+            }
+
+            $('#tablaTiendas').DataTable({
+                "pageLength": 10, // Puedes cambiarlo a 25, 50 o 100
+                "lengthMenu": [10, 25, 50, 100],
+                "language": {
+                    "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+                },
+                "ordering": true,
+                "responsive": true,
+                "columnDefs": [
+                    { "orderable": false, "targets": 5 } // Desactiva orden en columna de 'Acciones'
+                ]
+            });
+
+            // 3. Lógica del Botón Guardar (Unificada para evitar duplicados)
+            $('#btnGuardarTienda').on('click', function() {
+                var $btn = $(this);
+                var formData = $('#formTienda').serialize();
+
+                $btn.prop('disabled', true).text('Procesando...');
+
+                $.ajax({
+                    url: '@Url.Action("SaveTienda", "Tienda")',
+                    type: 'POST',
+                    data: formData,
+                    success: function(res) {
+                        if(res.success) {
+                            $('#modalTienda').modal('hide');
+                            Swal.fire("¡Éxito!", "Tienda guardada correctamente", "success").then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire("Error", res.message, "error");
+                            $btn.prop('disabled', false).text('Guardar Tienda');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire("Error", "Error de red o servidor", "error");
+                        $btn.prop('disabled', false).text('Guardar Tienda');
+                    }
+                });
+            });
+        });
+                // 4. Funciones Globales
+        function abrirModalTienda() {
+            $('#formTienda')[0].reset();
+            $('#Cod_Tienda').val('');
+            $('#modalTiendaLabel').text('Nueva Tienda'); // Cambiar título dinámicamente
+
+            // Reset de tabs
+            var firstTabEl = document.querySelector('#tiendaTabs li:first-child button');
+            var firstTab = new bootstrap.Tab(firstTabEl);
+            firstTab.show();
+
+            $('#modalTienda').modal('show');
+        }
+
+        function editarTienda(id) {
+            if (!id) return;
+            console.log("Editar tienda con ID:", id);
+            // Mostrar un indicador de carga (opcional)
+            Swal.fire({
+                title: 'Cargando...',
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: '@Url.Action("GetTiendaById", "Tienda")', // Necesitas crear esta acción en el Controller
+                type: 'GET',
+                data: { id: id },
+                success: function (response) { // Cambiamos el nombre a 'response' para mayor claridad
+                    Swal.close();
+
+                var tienda = response.data;
+
+            if (response.success && tienda) {
+            // 1. Limpiar el formulario
+            $('#formTienda')[0].reset();
+
+            // 2. Cargar el ID (Nota: en el JSON aparece como 'cod_Tienda')
+            $('#Cod_Tienda').val(tienda.cod_Tienda);
+            $('#modalTiendaLabel').text('Editando Tienda: ' + tienda.descripcion);
+
+            // 3. Llenar campos usando la variable 'tienda'
+            $('[name="Descripcion"]').val(tienda.descripcion);
+            $('[name="Codigo_Numerico"]').val(tienda.codigo_Numerico);
+            $('[name="Direccion"]').val(tienda.direccion);
+            $('[name="Ciudad"]').val(tienda.ciudad);
+            $('[name="Region"]').val(tienda.region);
+            $('[name="Estado"]').val(tienda.estado);
+            $('[name="Telefono"]').val(tienda.telefono);
+            $('[name="Mail"]').val(tienda.mail);
+            $('[name="Cod_Empresa"]').val(tienda.cod_Empresa);
+            $('[name="CodigoNike"]').val(tienda.codigoNike);
+            $('[name="Codigo_Comercio"]').val(tienda.codigo_Comercio);
+            $('[name="Talana"]').val(tienda.talana);
+
+            // Campos SII
+            $('[name="SucursalSii"]').val(tienda.sucursalSii);
+            $('[name="DireccionSii"]').val(tienda.direccionSii);
+            $('[name="ComunaSii"]').val(tienda.comunaSII); // Ojo: verifica si es comunaSii o comunaSII
+            $('[name="CiudadSii"]').val(tienda.ciudadSII);
+            $('[name="RegionSii"]').val(tienda.regionSII);
+
+            // 4. Manejo de Checkboxes
+            $('[name="ValidaStock"]').prop('checked', tienda.validaStock === true);
+            $('[name="BoletaElec"]').prop('checked', tienda.boletaElec === true);
+
+            // 5. Mostrar Modal
+            var firstTab = new bootstrap.Tab(document.querySelector('#general-tab'));
+            firstTab.show();
+            $('#modalTienda').modal('show');
+            } else {
+            Swal.fire("Error", response.message || "No se encontraron datos", "error");
+            }
+                },
+                error: function () {
+                    Swal.close();
+                    Swal.fire("Error", "Ocurrió un error al obtener los datos", "error");
+                }
+            });
+        }
+    </script>
+}

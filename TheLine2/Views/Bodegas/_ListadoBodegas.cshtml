@@ -1,0 +1,243 @@
+﻿@using Web.Models
+@model IEnumerable<BodegasViewModel>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <button type="button" class="btn btn-primary" onclick="abrirModalCrear()">
+        <i class="bi bi-plus-circle me-2"></i> Nueva Bodega
+    </button>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Descripción</th>
+                <th>Dirección</th>
+                <th>Estado</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Descripcion</td>
+                    <td>@item.Direccion</td>
+                    <td>
+                        @if (item.Estado == "V")
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Inactivo</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary" onclick="editarBodega('@item.Cod_Bodega')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarBodega('@item.Cod_Bodega')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        No hay bodegas registradas para esta tienda.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="bodegaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Registrar Bodega</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bodegaForm">
+                    <input type="hidden" id="modalCodTienda" name="Cod_Tienda" />
+                    <input type="hidden" id="modalCodBodega" name="Cod_Bodega" />
+                    <div class="mb-3">
+                        <label class="form-label">Tipo Bodega</label>
+                        <select class="form-select" name="Tipo_Bodega" required>
+                            <option value="">-- Seleccione un tipo --</option>
+                            <option value="D">Principal</option>
+                            <option value="F">Fallado</option>
+                            <option value="L">Labpratorio</option>
+                            <option value="S">Sucio</option>
+                            <option value="M">Merma</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" class="form-control" name="Descripcion" required maxlength="150" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" class="form-control" name="Direccion" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Estado</label>
+                        <select class="form-select" name="Estado">
+                            <option value="V">Activo</option>
+                            <option value="I">Inactivo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="saveBodegaBtn">Guardar Datos</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalCrear() {
+        // Obtenemos el ID del select que está en tu vista principal
+        var tiendaSeleccionada = $('#tiendaSelect').val();
+
+        if (!tiendaSeleccionada) {
+            alert("Por favor, seleccione una tienda en el listado superior.");
+            return;
+        }
+
+        // Limpiar formulario y asignar el ID de la tienda
+        $('#bodegaForm')[0].reset();
+        $('#modalCodTienda').val(tiendaSeleccionada);
+
+        // Mostrar modal
+        var modal = new bootstrap.Modal(document.getElementById('bodegaModal'));
+        modal.show();
+    }
+
+    $(document).ready(function () {
+        // Usamos .off() para evitar que el evento se duplique si la parcial se recarga
+        $('#saveBodegaBtn').off('click').on('click', function () {
+            var $btn = $(this);
+            var formData = $('#bodegaForm').serialize();
+
+            // Deshabilitar botón para evitar doble clic
+            $btn.prop('disabled', true).text('Guardando...');
+
+            $.ajax({
+                url: '@Url.Action("CreateBodega", "Bodegas")',
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.success) {
+                    // 1. Cerrar el modal
+                    $('#bodegaModal').modal('hide');
+
+                    // 2. Mostrar Alerta
+                    Swal.fire({
+                        title: "¡Éxito!",
+                        text: "Bodega guardada exitosamente",
+                        icon: "success",
+                        timer: 1500, // Se cierra en 1.5 segundos
+                        showConfirmButton: false
+                    }).then(() => {
+                    // 3. ESTO ES LO QUE RECARGA LA TABLA
+                    // Asegúrate de que el ID 'tiendaSelect' sea el correcto del combo en tu Index
+                    console.log("Recargando tabla para la tienda...");
+                    $('#tiendaSelect').trigger('change');
+                    });
+                    } else {
+                        Swal.fire({
+                        title: "Error",
+                        text: response.message,
+                        icon: "error"
+                        });
+                        $btn.prop('disabled', false).text('Guardar Datos');
+                    }
+                },
+                        error: function () {
+                        Swal.fire({
+                        title: "Error",
+                        text: response.message,
+                        icon: "error"
+                        });
+                        $btn.prop('disabled', false).text('Guardar Datos');
+                }
+            });
+        });
+    });
+        function abrirModalCrear() {
+        var tiendaSeleccionada = $('#tiendaSelect').val();
+        if (!tiendaSeleccionada) {
+            Swal.fire("Atención", "Seleccione una tienda primero", "warning");
+            return;
+        }
+
+        $('#bodegaForm')[0].reset(); // Limpia los inputs
+        $('#modalCodBodega').val(''); // IMPORTANTE: Aseguramos que el ID esté vacío
+        $('#modalCodTienda').val(tiendaSeleccionada);
+        $('.modal-title').text('Registrar Nueva Bodega');
+
+        new bootstrap.Modal(document.getElementById('bodegaModal')).show();
+    }
+        function editarBodega(id) {
+        // 1. Buscamos los datos de la bodega por su ID
+        $.get('@Url.Action("GetBodegaById", "Bodegas")', { id: id }, function (data) {
+            if (data) {
+                // 2. Cambiamos el título del modal
+                $('.modal-title').text('Editar Bodega: ' + data.descripcion);
+
+                // 3. Llenamos los campos del formulario
+                $('#modalCodBodega').val(data.cod_Bodega);
+                $('#modalCodTienda').val(data.cod_Tienda);
+                $('[name="Descripcion"]').val(data.descripcion);
+                $('[name="Direccion"]').val(data.direccion);
+                $('[name="Estado"]').val(data.estado);
+                $('[name="Tipo_Bodega"]').val(data.tipo_Bodega);
+
+                // 4. Mostramos el modal
+                var modal = new bootstrap.Modal(document.getElementById('bodegaModal'));
+                modal.show();
+            }
+        }).fail(function() {
+            Swal.fire("Error", "No se pudieron cargar los datos de la bodega", "error");
+        });
+    }
+        function eliminarBodega(id, nombre) {
+        Swal.fire({
+            title: "¿Eliminar Bodega?",
+            text: "Está a punto de eliminar: " + nombre + ". Esta acción no se puede deshacer.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '@Url.Action("DeleteBodega", "Bodegas")',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire("Eliminado", "La bodega ha sido borrada.", "success");
+                            $('#tiendaSelect').trigger('change');
+                        } else {
+                            Swal.fire("Error", response.message, "error");
+                        }
+                    },
+                    error: function () {
+                        Swal.fire("Error", "No se pudo completar la operación.", "error");
+                    }
+                });
+            }
+        });
+    }
+</script>

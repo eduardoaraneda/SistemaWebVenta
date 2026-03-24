@@ -1,0 +1,164 @@
+﻿@using Application.ViewModel.PuntoVenta
+@model DocumentoImpresionVM
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Boleta Electrónica</title>
+
+    <style>
+        body {
+            font-family: monospace;
+            font-size: 12px;
+            width: 80mm;
+            margin: 0;
+            padding: 0;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .line {
+            border-top: 1px dashed black;
+            margin: 6px 0;
+        }
+
+        img.logo {
+            max-width: 120px;
+            margin: 6px auto;
+            display: block;
+        }
+
+        img.sii {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 2px 0;
+            vertical-align: top;
+        }
+    </style>
+</head>
+
+<body onload="window.print()">
+
+    <!-- ENCABEZADO -->
+    <div class="center">
+        <strong>R.U.T.: @Model.RutEmpresa</strong><br />
+        <strong>BOLETA ELECTRÓNICA</strong><br />
+        Nº @Model.Numero
+    </div>
+
+    <img src="~/image/@Model.LogoEmpresa" class="logo" />
+
+    <div class="center">
+        <strong>@Model.NomEmpresa</strong><br />
+        Giro: @Model.Giro <br />
+        Casa Matriz: @Model.DirEmpresa <br />
+        Fono: @Model.Fono <br />
+        Email: @Model.CorreoEmpresa <br />
+        Tienda: @Model.Tienda <br />
+        Dirección: @Model.DirTienda
+    </div>
+
+    <div class="line"></div>
+
+    <!-- CLIENTE -->
+    <strong>RECEPTOR</strong>
+    <br />
+    Señor(es): @Model.NomCliente
+    <br />
+    R.U.T.: @Model.RutCliente
+    <br />
+    Dirección: @Model.DirCliente
+    <br />
+    Comuna: @Model.ComCliente
+    <br />
+    Fecha Emisión: @Model.Fecha
+
+    <div class="line"></div>
+
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 1px solid black;">
+                <th align="left" style="font-size: 10px; padding-bottom: 5px;">DESCRIPCIÓN / DETALLE</th>
+                <th class="right" style="font-size: 10px; padding-bottom: 5px;">SUBTOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model.Detalles)
+            {
+                <tr>
+                    <td colspan="2" style="padding-top: 10px; line-height: 1.2;">
+                        <strong>@d.Descripcion.ToUpper()</strong>
+                    </td>
+                </tr>
+
+                <tr style="border-bottom: 0.5px dashed #666;">
+                    <td style="font-size: 11px; padding-bottom: 8px; color: #333;">
+                        @d.Cantidad x $@d.Precio.ToString("N0")
+
+                        @if (d.Descuento > 0)
+                        {
+                            <br />
+                            <small>Descuento: -$@d.Descuento </small>
+                        }
+                    </td>
+                    <td class="right" style="vertical-align: bottom; padding-bottom: 8px; font-weight: bold;">
+                        $@d.dTotal.ToString("N0")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="line"></div>
+
+    <!-- TOTALES -->
+    <table>
+        <tr>
+            <td>NETO</td>
+            <td class="right">$@Model.Neto</td>
+        </tr>
+        <tr>
+            <td>EXENTO</td>
+            <td class="right">$@Model.Exento</td>
+        </tr>
+        <tr>
+            <td>IVA</td>
+            <td class="right">$@Model.Iva</td>
+        </tr>
+        <tr>
+            <td><strong>TOTAL</strong></td>
+            <td class="right"><strong>$@Model.cTotal</strong></td>
+        </tr>
+    </table>
+
+    <div class="line"></div>
+
+    <!-- TIMBRE SII -->
+    <img src="~/sii/sii.png" class="sii" />
+
+    <div class="center">
+        Timbre Electrónico SII<br />
+        Res. 80 de 22/08/2014<br />
+        Verifique documento: www.sii.cl
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+﻿<div class="modal fade" id="Clientemodal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Validación de Usuario del Sistema</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Este cliente posee una cuenta de usuario. Por favor, valide su identidad.</p>
+                <form id="validaClienteForm">
+                    <div class="mb-3">
+                        <label class="form-label">Rut del Cliente</label>
+                        <input type="text" class="form-control" id="clienteId" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña de Usuario</label>
+                        <input type="password" class="form-control" id="passCliente" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar Venta</button>
+                <button type="button" class="btn btn-primary" id="btnValidarPassword">Validar Acceso</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    (function() {
+        var registrarEvento = function() {
+            
+            $(document).off('click', '#btnValidarPassword').on('click', '#btnValidarPassword', function (e) {
+                e.preventDefault();
+                console.log("Botón presionado"); 
+
+                var clienteId = $('#clienteId').val();
+                var passCliente = $('#passCliente').val();
+
+                if (!passCliente) {
+                    alert('Por favor, ingrese la contraseña.');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/PuntoVenta/ValidaUsuario',
+                    type: 'POST',
+                    data: {
+                        rut: clienteId,
+                        contraseña: passCliente
+                    },
+                    success: function (response) {
+                        if (response.isValid) {
+                            console.log(response);
+                            $('#montoCliente').val(response.monto);
+                            $('#utilizadoCliente').val(response.utilizado);
+                            Swal.fire("¡Éxito!", "Usuario Validado", "success");
+                            $('#Clientemodal').modal('hide');
+                        } else {
+                            Swal.fire("¡Error!", "Contraseña incorrecta", "error");
+                            document.getElementById('NombreCompleto').value = "";
+                        }
+                    }
+                });
+            });
+        };
+
+        // Si jQuery ya cargó, ejecuta. Si no, espera al evento load.
+        if (window.jQuery) {
+            registrarEvento();
+        } else {
+            window.addEventListener('load', registrarEvento);
+        }
+    })();
+</script>

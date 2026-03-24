@@ -1,0 +1,844 @@
+﻿@{
+    ViewData["Title"] = "Punto de Venta";
+}
+
+<style>
+    .pos-container {
+        font-size: 0.85rem;
+        background-color: #f8f9fa;
+    }
+
+    .section-title {
+        background-color: #6c757d;
+        color: white;
+        padding: 2px 10px;
+        font-weight: bold;
+        margin-bottom: 0;
+    }
+
+    .card-pos {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        background: white;
+        margin-bottom: 10px;
+    }
+
+    .table-pos thead {
+        background-color: #f1f1f1;
+    }
+
+    .table-wrapper {
+        height: 250px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+    }
+
+    .total-display {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        text-align: right;
+    }
+
+    .btn-pos {
+        min-width: 100px;
+        font-weight: bold;
+    }
+
+    .form-control-sm, .form-select-sm {
+        border-radius: 0;
+    }
+
+    .bg-yellow {
+        background-color: #fffde7;
+    }
+
+    .input-pago {
+        font-weight: bold;
+        font-size: 1rem;
+    }
+</style>
+
+<div class="container-fluid pos-container p-2">
+    <div class="section-title">Encabezado Documento</div>
+    <div class="card-pos p-2">
+        <div class="row g-2">
+            <div class="col-md-2">
+                <label class="form-label mb-0">Tipo Venta</label>
+                <select id="TipoDocumento" class="form-select form-select-sm">
+                    <option value="BLV">Boleta</option>
+                    <option value="GDV">Factura</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label mb-0">Correlativo</label>
+                <input type="text" class="form-control form-control-sm text-center fw-bold" value="0" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label mb-0 fw-bold text-primary" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#modalCliente">Cliente</label>
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control w-30" placeholder="Rut" id="Rut">
+                    <input type="text" class="form-control w-50" readonly id="NombreCompleto">
+                    <input hidden class="form-control" id="idCliente"/>
+                    <input hidden class="form-control" id="Registrado"/>
+                    <input type="hidden"class="form-control"id="Folio"name="Folio"value="@ViewBag.Folio" />
+                    <input type="text" id="utilizadoCliente" hidden />
+                    <input type="text" id="montoCliente" hidden />
+
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label mb-0">Fecha Emision</label>
+                <input type="text" class="form-control form-control-sm" value="@DateTime.Now.ToString("dd-MM-yyyy")" readonly>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label mb-0">Tienda</label>
+                <input type="text" class="form-control form-control-sm" value="@User.FindFirst("Tienda")?.Value" readonly>
+                <input hidden type="text" id="Cod_Tienda" value="@User.FindFirst("CodTienda")?.Value">
+            </div>
+        </div>
+        <div class="row g-2 mt-1 align-items-center">
+            <div class="col-md-2">
+                <label class="form-label mb-0">Rut Vendedor</label>
+                <input type="text" class="form-control form-control-sm" id="VendedorRut">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label mb-0">Vendedor</label>
+                <input type="text" class="form-control form-control-sm" readonly id="NombreVendedor">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label mb-0">Cajero</label>
+                <input type="text" class="form-control form-control-sm" value="@User.FindFirst("NombreCompleto")?.Value" readonly>
+            </div>
+            <div class="col-md-1">
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="retiroPosterior">
+                    <label class="form-check-label small" for="retiroPosterior">Retiro Posterior</label>
+                </div>
+            </div>
+            <div class="col-md-3 d-flex justify-content-end total-display">
+                <div>Total: <span id="txtTotal">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-2">
+        <div class="col-md-9">
+            <div class="section-title">Detalle de Productos</div>
+            <div class="card-pos p-2">
+                <div class="row g-2 mb-2 bg-light p-2 border">
+                    <div class="col-md-2">
+                        <label class="form-label mb-0">Producto</label>
+                        <input type="text" class="form-control form-control-sm" id="Producto">
+                        <input hidden type="text" id="CodProducto" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label mb-0">Descripcion</label>
+                        <input type="text" class="form-control form-control-sm" readonly id="DescProducto">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label mb-0">Precio</label>
+                        <input type="number" class="form-control form-control-sm text-end" readonly id="PrecioProd">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label mb-0">Cantidad</label>
+                        <input type="number" class="form-control form-control-sm text-center" id="CantProducto">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label mb-0">Descuento</label>
+                        <input type="number" class="form-control form-control-sm text-end" readonly id="DescuProducto">
+                        <input type="text" hidden id="CodBodega"/>
+                    </div>
+                    <div class="col-md-3 d-flex gap-1">
+                        <button type="button" id="btnAgregarProducto" class="btn btn-primary btn-sm w-100 fw-bold">Agregar (F8)</button>
+                        <button type="button" onclick="limpiarProducto()" class="btn btn-secondary btn-sm w-100 fw-bold">Limpiar (F9)</button>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="table table-sm table-bordered table-pos mb-0" id="tablaProductos">
+                        <thead>
+                            <tr>
+                                <th width="50">Tipo</th>
+                                <th width="120">Producto</th>
+                                <th>Descripción</th>
+                                <th width="100">Precio</th>
+                                <th width="80">Cant.</th>
+                                <th width="100">Desc.</th>
+                                <th width="100">Total</th>
+
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyDetalle"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row g-1 align-items-center mb-1">
+                <div class="col-md-2">
+                    <button class="btn btn-primary btn-sm w-100 fw-bold"
+                            style="background-color: #6a89cc; border:none;"
+                            onclick="abrirModal2()">
+                        Validacion GiftCards
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-transparent border-0 fw-bold small">Doc. Cambio</span>
+                        <input type="text" class="form-control form-control-sm bg-light" id="tipoCambio">
+                        <input type="text" class="form-control form-control-sm bg-light" id="numCambio">
+                        <input type="text" class="form-control form-control-sm bg-light" id="IdDoc" hidden />
+                    </div>
+                </div>
+                <div class="col-md-3 offset-md-3 text-end">
+                    <button class="btn btn-primary btn-sm px-4 fw-bold"
+                            style="background-color: #6a89cc; border:none;"
+                            onclick="abrirModal()">
+                        Buscar Documento Cambio
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-wrapper" style="height: 120px;">
+                <table class="table table-sm table-bordered table-pos mb-0" id="TablaCambios">
+                    <thead>
+                        <tr>
+                            <th width="70">T.C</th>
+                            <th width="100">Producto</th>
+                            <th>Descripcion</th>
+                            <th width="80" class="text-end">Precio</th>
+                            <th width="60" class="text-center">Cantidad</th>
+                            <th width="80" class="text-end">Descuento</th>
+                            <th width="80" class="text-end">Total</th>
+                            <th width="80" class="text-end" hidden>ID</th>
+                            <th width="80" class="text-end" hidden>CP</th>
+                            <th width="80" class="text-end" hidden>CB</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyCambios">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="section-title">Resumen de Pago</div>
+            <div class="card-pos p-2 bg-light mb-2">
+                <div class="row g-0 text-center">
+                    <div class="col-4 border-end">
+                        <small class="d-block fw-bold">Monto Total</small>
+                        <span id="resumenTotal" class="fw-bold text-primary">0</span>
+                    </div>
+                    <div class="col-4 border-end">
+                        <small class="d-block fw-bold">Monto Pagos</small>
+                        <span id="resumenPagos" class="fw-bold text-success">0</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="d-block fw-bold">Monto Vuelto</small>
+                        <span id="resumenVuelto" class="fw-bold text-danger">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">Medios Pago</div>
+            <div class="card-pos p-3">
+                <div class="row mb-2 align-items-center">
+                    <div class="col-6">Efectivo</div>
+                    <div class="col-6">
+                        <input type="number" id="pagoEfectivo" class="form-control form-control-sm text-end input-pago" value="0">
+                    </div>
+                </div>
+                <div class="row mb-2 align-items-center">
+                    <div class="col-6">Tarjetas Credito</div>
+                    <div class="col-6">
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="pagoTarjeta" class="form-control text-end input-pago" value="0" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-2 align-items-center">
+                    <div class="col-6 fw-bold">Cambios</div>
+                    <div class="col-6">
+                        <input type="number" id="pagoCambio" class="form-control form-control-sm text-end bg-yellow input-pago" value="0" readonly>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary w-100 fw-bold">TRANSBANK</button>
+        </div>
+    </div>
+
+    <div class="row mt-2 g-2 align-items-center bg-white p-2 border shadow-sm">
+        <div class="col-md-3">
+            <span class="small fw-bold">Estacion:</span>
+            <span class="badge bg-light text-dark border">@User.FindFirst("Estacion")?.Value</span>
+        </div>
+        <div class="col-md-9 d-flex justify-content-end gap-1">
+            <button class="btn btn-primary btn-sm btn-pos ms-3" id="btnGrabarVenta">Grabar</button>
+            <button class="btn btn-warning btn-sm btn-pos" onclick="location.reload()">Limpiar</button>
+            <button class="btn btn-danger btn-sm btn-pos">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<partial name="ValidaCliente" />
+<partial name="CambioDoc" />
+<partial name="Giftcard"/>
+<partial name="Cliente" />
+
+@section Scripts {
+    <script>
+
+            document.addEventListener("DOMContentLoaded", function () {
+
+                    const modal = document.getElementById('modalCliente');
+
+                    modal.addEventListener('show.bs.modal', function () {
+
+                    // Obtener valor del input principal
+                    let rut = document.getElementById('Rut').value;
+
+                    // Pasarlo al input del modal
+                    document.getElementById('RutModal').value = rut;
+
+                    });
+            });
+                /* ===========================
+               LIMPIAR INPUTS
+            =========================== */
+            function limpiarInputsProducto() {
+                $('#Producto, #CodProducto, #DescProducto, #PrecioProd, #CantProducto, #DescuProducto, #CodBodega').val('');
+                //limpiar tabla
+
+            }
+
+            function limpiarProducto() {
+            $('#Producto, #CodProducto, #DescProducto, #PrecioProd, #CantProducto, #DescuProducto, #CodBodega').val('');
+            $('#tablaProductos tbody').empty();
+            $('#Producto').focus();
+            }
+      
+                /* ===========================
+            TOTALES (Globalizada)
+            =========================== */
+            // Sacamos la función del scope local para que CambioDoc pueda verla siempre
+            window.actualizarTotalGeneral = function() {
+                let total = 0;
+                // Sumamos los totales de la tabla de venta
+                $('#tbodyDetalle .total-fila').each(function () {
+                total += parseFloat($(this).data('valor')) || 0;
+                });
+
+                $('#txtTotal').text(total.toLocaleString('es-CL'));
+
+                // Ejecutamos el cálculo de pagos inmediatamente
+                calcularPagos();
+            }
+
+        /* ===========================
+            PAGOS (Con Vuelto Negativo)
+        =========================== */
+        // Listener para cambios manuales en efectivo/tarjeta
+        $(document).on('input change', '.input-pago', calcularPagos);
+
+        function calcularPagos() {
+            // 1. Obtener el total de la venta (limpiando puntos)
+            let totalVenta = parseInt($('#txtTotal').text().replace(/\D/g, '')) || 0;
+
+            // 2. Obtener valores de los inputs (limpiando cualquier formato)
+            let efectivo = parseInt($('#pagoEfectivo').val().toString().replace(/\D/g, '')) || 0;
+            let tarjeta = parseInt($('#pagoTarjeta').val().toString().replace(/\D/g, '')) || 0;
+            let cambios = parseInt($('#pagoCambio').val().toString().replace(/\D/g, '')) || 0;
+
+            let totalPagado = efectivo + tarjeta + cambios;
+
+            // 3. Vuelto: Si es negativo, significa que falta dinero
+            let vuelto = totalPagado - totalVenta;
+
+            // 4. Actualizar visualmente la vista
+            $('#resumenTotal').text(totalVenta.toLocaleString('es-CL'));
+            $('#resumenPagos').text(totalPagado.toLocaleString('es-CL'));
+
+            const $lblVuelto = $('#resumenVuelto');
+            $lblVuelto.text(vuelto.toLocaleString('es-CL'));
+
+            // 5. Estética de colores
+            if (vuelto < 0) {
+                $lblVuelto.css('color', 'red').addClass('fw-bold');
+            } else {
+                $lblVuelto.css('color', 'green').addClass('fw-bold');
+            }
+        }
+
+
+
+        $(document).ready(function () {
+
+
+
+            /* ===========================
+               VALIDACIÓN CLIENTE
+            =========================== */
+                      $('#Rut').on('keydown', function (e) {
+
+            if (e.key === 'Tab' || e.key === 'Enter') {
+
+                e.preventDefault(); // evita doble ejecución
+
+                let rut = $(this).val().trim();
+
+                if (rut === "") return;
+
+                $.get('@Url.Action("ValidaCliente", "PuntoVenta")',
+                    { rut: rut },
+                    function (response) {
+
+                        if (response.success) {
+
+                            // 🔹 CLIENTE EXISTE
+                            $('#NombreCompleto').val(response.cliente.nombre);
+                            $('#idCliente').val(response.cliente.codCliente);
+                            $('#Registrado').val(response.cliente.registrado);
+
+                            if (response.cliente.registrado) {
+                                $('#clienteId').val(response.cliente.rut_Cliente);
+                                $('#Clientemodal').modal('show');
+                            }
+
+                        } else {
+
+                            // 🔴 CLIENTE NO EXISTE
+                            Swal.fire({
+                                title: 'Cliente no existe',
+                                text: '¿Desea crear el cliente?',
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonText: 'Sí, crear',
+                                cancelButtonText: 'No'
+                            }).then((result) => {
+
+                                if (result.isConfirmed) {
+
+                                    // 🔹 Limpia el modal
+                                    $('#modalCliente input').val('');
+                                    $('#modalCliente select').val('');
+
+                                    // 🔹 Pasa el RUT al input del modal
+                                    $('#modalCliente #Rut').val(rut);
+
+                                    // 🔹 Abre el modal correcto
+                                    var modal = new bootstrap.Modal(document.getElementById('modalCliente'));
+                                    modal.show();
+                                }
+                            });
+
+                        }
+
+                    }
+                );
+            }
+        });
+
+            /* ===========================
+               VALIDACIÓN VENDEDOR
+            =========================== */
+            $('#VendedorRut').on('keydown', function (e) {
+                if (e.key === 'Tab' || e.key === 'Enter') {
+                    $.get('@Url.Action("ValidaVendedor", "PuntoVenta")',
+                        {
+                            rut: $(this).val(),
+                            cod_tienda: $('#Cod_Tienda').val()
+                        },
+                        function (r) {
+                            if (r.success) {
+                                $('#NombreVendedor').val(r.usuario.nombre);
+                            } else {
+                                Swal.fire("Aviso", r.message, "warning");
+                            }
+                        });
+                }
+            });
+
+            /* ===========================
+               VALIDACIÓN PRODUCTO
+            =========================== */
+            $('#Producto').on('keydown', function (e) {
+                if (e.key === 'Tab' || e.key === 'Enter') {
+                    $.get('@Url.Action("ValidaProducto", "PuntoVenta")',
+                        {
+                            producto: $(this).val(),
+                            codtienda: $('#Cod_Tienda').val(),
+                            registrado: $('#Registrado').val()
+                        },
+                        function (r) {
+                            if (r.success) {
+                                const p = r.productoValido;
+                                $('#DescProducto').val(p.descripcion);
+                                $('#PrecioProd').val(p.precioVenta);
+                                $('#CantProducto').val(1).focus();
+                                $('#DescuProducto').val(p.descuento);
+                                $('#CodProducto').val(p.codigo);
+                                $('#CodBodega').val(p.codBodega);
+                            } else {
+                                Swal.fire("Aviso", r.message, "warning");
+                            }
+                        });
+                }
+            });
+
+            /* ===========================
+               EVENTOS TECLADO
+            =========================== */
+            $('#btnAgregarProducto').on('click', agregarProductoATabla);
+
+            $(document).on('keydown', function (e) {
+                if (e.key === 'F8') {
+                    e.preventDefault();
+                    agregarProductoATabla();
+                }
+                if (e.key === 'F9') {
+                    e.preventDefault();
+                    limpiarProducto();
+                }
+            });
+
+            /* ===========================
+               AGREGAR PRODUCTO
+            =========================== */
+            function agregarProductoATabla() {
+
+                const cod = $('#CodProducto').val();
+                const sku = $('#Producto').val();
+                const desc = $('#DescProducto').val();
+                const precio = parseFloat($('#PrecioProd').val()) || 0;
+                const cantNueva = parseFloat($('#CantProducto').val()) || 0;
+                const descUnit = parseFloat($('#DescuProducto').val()) || 0;
+                const bodega = $('#CodBodega').val() || "01";
+                const cliente = $('#idCliente').val();
+
+                if (!cliente) {
+                    Swal.fire("Aviso", "Debe ingresar un cliente antes de agregar productos", "warning");
+                    limpiarInputsProducto();
+                    return;
+                }
+
+
+                if (!cod || cantNueva <= 0) {
+                    Swal.fire("Aviso", "Seleccione un producto y cantidad válida", "warning");
+                    return;
+                }
+
+                let fila = $(`#tbodyDetalle tr[data-cod="${cod}"]`);
+
+                if (fila.length > 0) {
+                    let cantTotal = parseFloat(fila.find('.col-cantidad').text()) + cantNueva;
+                    let descTotal = descUnit * cantTotal;
+                    let filaTotal = (precio * cantTotal) - descTotal;
+
+                    fila.find('.col-cantidad').text(cantTotal);
+                    fila.find('.col-descuento').text(`-${descTotal.toLocaleString('es-CL')}`);
+                    fila.find('.total-fila')
+                        .text(filaTotal.toLocaleString('es-CL'))
+                        .data('valor', filaTotal);
+
+                } else {
+
+                    let descTotal = descUnit * cantNueva;
+                    let filaTotal = (precio * cantNueva) - descTotal;
+
+                    const nuevaFila = `
+                        <tr data-cod="${cod}" data-bodega="${bodega}">
+                            <td class="text-center">VEN</td>
+                            <td>${sku}</td>
+                            <td>${desc}</td>
+                            <td class="text-end">${precio.toLocaleString('es-CL')}</td>
+                            <td class="text-center col-cantidad">${cantNueva}</td>
+                            <td class="text-end text-danger col-descuento">
+                                -${descTotal.toLocaleString('es-CL')}
+                            </td>
+                            <td class="text-end fw-bold total-fila"
+                                data-valor="${filaTotal}">
+                                ${filaTotal.toLocaleString('es-CL')}
+                            </td>
+                        </tr>`;
+                    $('#tbodyDetalle').append(nuevaFila);
+                }
+
+                actualizarTotalGeneral();
+                limpiarInputsProducto();
+                $('#Producto').focus();
+            }
+
+            // /* ===========================
+            //    TOTALES
+            // =========================== */
+            // function actualizarTotalGeneral() {
+            //     let total = 0;
+            //     $('.total-fila').each(function () {
+            //         total += $(this).data('valor') || 0;
+            //     });
+
+            //     $('#txtTotal').text(total.toLocaleString('es-CL'));
+
+            //     // IMPORTANTE: Refrescar los cálculos de pago y vuelto
+            //     calcularPagos();
+            // }
+
+            // /* ===========================
+            //    PAGOS
+            // =========================== */
+            // $('.input-pago').on('input change', calcularPagos);
+
+            // function calcularPagos() {
+            // let totalVenta = parseInt($('#txtTotal').text().replace(/\D/g, '')) || 0;
+            // let efectivo = parseInt($('#pagoEfectivo').val().toString().replace(/\D/g, '')) || 0;
+            // let tarjeta = parseInt($('#pagoTarjeta').val().toString().replace(/\D/g, '')) || 0;
+            // let cambios = parseInt($('#pagoCambio').val().toString().replace(/\D/g, '')) || 0;
+
+            // console.log("Total Venta:", totalVenta);
+            // console.log("Efectivo:", efectivo);
+            // console.log("Tarjeta:", tarjeta);
+            // console.log("Cambios:", cambios);
+
+            // let totalPagado = efectivo + tarjeta + cambios;
+            // let vuelto = totalPagado - totalVenta;
+
+            // // 3. Actualizar los textos de resumen
+            // $('#resumenTotal').text(totalVenta.toLocaleString('es-CL'));
+            // $('#resumenPagos').text(totalPagado.toLocaleString('es-CL'));
+
+            // const $lblVuelto = $('#resumenVuelto');
+            // $lblVuelto.text(vuelto.toLocaleString('es-CL'));
+
+            // // 4. Cambiar color a rojo si es negativo
+            // if (vuelto < 0) {
+            //     $lblVuelto.css('color', 'red');
+            // } else {
+            //     $lblVuelto.css('color', 'green');
+            // }
+            // }
+
+                    /* ===========================
+           GRABAR VENTA
+        =========================== */
+             $('#btnGrabarVenta').on('click', function () {
+
+            const CodClie = $('#idCliente').val();
+            const rutVend = $('#VendedorRut').val();
+            const totalVenta = parseInt($('#resumenTotal').text().replace(/\./g, '')) || 0;
+            const totalPagos = parseInt($('#resumenPagos').text().replace(/\./g, '')) || 0;
+
+            if(totalPagos < totalVenta) {
+                Swal.fire("Error", "El monto de pagos es menor al total de la venta", "error");
+                return;
+            }
+
+            if (!CodClie || !rutVend) {
+                Swal.fire("Error", "Debe ingresar Cliente y Vendedor", "error");
+                return;
+            }
+
+            const filas = $('#tbodyDetalle tr');
+            if (filas.length === 0) {
+                Swal.fire("Error", "No hay productos en la venta", "error");
+                return;
+            }
+
+            const ventaData = {
+                TipoVenta: $('#TipoDocumento').val(),
+                Total: parseInt($('#txtTotal').text().replace(/\./g, '')) || 0,
+                Vuelto: parseInt($('#resumenVuelto').text().replace(/\./g, '')) || 0,
+                CodCliente: CodClie,
+                RutVendedor: rutVend,
+                RetiroPosterior: $('#retiroPosterior').is(':checked'),
+                IdDocumentoCambio: $('#IdDoc').val(),
+                NumCambio: $('#numCambio').val(),
+                TipoCambio: $('#tipoCambio').val(),
+                Folio: $('#Folio').val(),
+                TotalCambio: parseInt($('#pagoCambio').val()) || 0,
+                montoCliente: parseInt($('#utilizadoCliente').val()) || 0,
+                utilizadoCliente: parseInt($('#montoCliente').val()) || 0,
+                Registrado : $('#Registrado').val(),
+                Pagos: {
+                    Efectivo: parseInt($('#pagoEfectivo').val()) || 0,
+                    Tarjeta: parseInt($('#pagoTarjeta').val()) || 0,
+                    Cambios: parseInt($('#pagoCambio').val()) || 0
+                },
+                Detalles: [],
+                Cambios: []
+            };
+
+            filas.each(function () {
+                const f = $(this);
+                ventaData.Detalles.push({
+                    CodProducto: f.data('cod'),
+                    CodBodega: f.data('bodega'),
+                    Cantidad: parseFloat(f.find('.col-cantidad').text()) || 0,
+                    descripcion: f.find('td:eq(2)').text(),
+                    Precio: parseInt(f.find('td:eq(3)').text().replace(/\./g, '')) || 0,
+                    DescuentoMonto: Math.abs(parseInt(f.find('.col-descuento').text().replace(/\./g, ''))) || 0,
+                    TotalFila: f.find('.total-fila').data('valor') || 0
+                });
+            });
+
+            $('#tbodyCambios tr').each(function () {
+                const f = $(this);
+                ventaData.Cambios.push({
+                    CodProducto: f.find('td:eq(8)').text(),
+                    Descripcion: f.find('td:eq(2)').text(),
+                    Precio: parseInt(f.find('td:eq(3)').text().replace(/\./g, '')) || 0,
+                    Cantidad: parseInt(f.find('td:eq(4)').text()) || 0,
+                    DescuentoMonto: Math.abs(parseInt(f.find('td:eq(5)').text().replace(/\./g, ''))) || 0,
+                    TotalFila: parseInt(f.find('td:eq(6)').text().replace(/\./g, '')) || 0,
+                    IdDocOriginal: f.find('td:eq(7)').text(),
+                    NumDocOriginal: $('#numCambio').val(),
+                    TipoDocOriginal: $('#tipoCambio').val(),
+                    CodBodega: f.find('td:eq(9)').text()
+                });
+            });
+
+            Swal.fire({
+                title: '¿Confirmar Venta?',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, Grabar'
+            }).then((r) => {
+
+                if (!r.isConfirmed) return;
+
+            $.ajax({
+                url: '@Url.Action("GrabarVenta", "PuntoVenta")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(ventaData),
+                beforeSend: function () {
+                Swal.fire({
+                    title: 'Grabando...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+                },
+                success: function (resp) {
+                Swal.close();
+
+                if (resp.success) {
+                console.log(resp);
+                // ==============================
+                // 1) DOCUMENTO PRINCIPAL
+                // ==============================
+                let folioPrincipal = "";
+                let tipoPrincipal = "";
+
+                if (resp.urlFactura) {
+                // FACTURA (ERP / Dynamics)
+                tipoPrincipal = "FACTURA";
+                folioPrincipal = resp.folio ?? "";
+
+                setTimeout(() => {
+                    window.open(resp.urlFactura, "_blank");
+                }, 200);
+
+                } else {
+                // BOLETA (Sistema propio)
+                tipoPrincipal = "BOLETA";
+                folioPrincipal = resp.folio ?? "";
+
+                setTimeout(() => {
+                    window.open(`/PuntoVenta/Imprimir?tipo=BLE&id=${resp.idDoc}`, "_blank");
+                }, 200);
+                }
+
+                // ==============================
+                // 2) NOTA DE CRÉDITO (SI EXISTE)
+                // ==============================
+                let mensajeNC = "";
+
+                if (resp.tieneNC === true && resp.ncData && resp.ncData.idNC) {
+
+                mensajeNC = " y Nota de Crédito N° " + (resp.ncData.folioNC ?? "");
+
+                setTimeout(() => {
+                    window.open(
+                        `/PuntoVenta/Imprimir?tipo=NCV&id=${resp.ncData.idNC}`,
+                        "_blank"
+                    );
+                }, 600); // después del documento principal
+                }
+
+                // ==============================
+                // 3) MENSAJE FINAL
+                // ==============================
+                Swal.fire({
+                title: "Venta Finalizada",
+                text: `${tipoPrincipal} N° ${folioPrincipal}${mensajeNC}`,
+                icon: "success",
+                confirmButtonText: "Aceptar"
+                }).then(() => {
+                location.reload();
+                });
+            }else {
+                      Swal.fire({
+                            title: "Error",
+                            text: resp.message || "Error al procesar la venta",
+                            icon: "error",
+                            timer: 3000,
+                            showConfirmButton: false
+                      });
+                setTimeout(() => location.reload(), 3000);
+
+                }
+            },
+            error: function () {
+                Swal.close();
+                Swal.fire("Error", "Error de comunicación con el servidor", "error");
+            }
+        });
+
+            });
+        });
+
+        });
+                   // Inicializamos el modal de Bootstrap
+        let miModal = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Vinculamos el ID del HTML
+            miModal = new bootstrap.Modal(document.getElementById('modalCambio'));
+        });
+
+        function abrirModal() {
+            if (miModal) {
+                miModal.show();
+            }
+        }
+
+        function cerrarModal() {
+            if (miModal) {
+                miModal.hide();
+            }
+        }
+
+        let miModalGif = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalElement = document.getElementById('modalGiftcard');
+
+            if (modalElement) {
+                miModalGif = new bootstrap.Modal(modalElement);
+            } else {
+                console.error("No se encontró el modalGiftcard");
+            }
+        });
+
+        function abrirModal2() {
+            if (miModalGif) {
+                miModalGif.show();
+            }
+        }
+
+        function cerrarModal2() {
+            if (miModalGif) {
+                miModalGif.hide();
+            }
+        }
+
+
+    </script>
+}

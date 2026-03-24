@@ -1,0 +1,278 @@
+﻿<div class="modal fade" id="modalGiftcard" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Validación de GiftCard
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <!-- DATOS GIFTCARD -->
+                <fieldset class="border p-2 mb-3">
+                    <legend class="float-none w-auto px-2 fw-bold small">
+                        Datos GiftCard
+                    </legend>
+
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">Número</label>
+                            <input type="text" class="form-control form-control-sm" id="gcNumero">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">Validador</label>
+                            <input type="text" class="form-control form-control-sm" id="gcValidador">
+                        </div>
+
+                        <div class="col-md-4">
+                            <button class="btn btn-primary btn-sm w-100 fw-bold" id="btnBuscarGift">
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- DETALLE INFORMACIÓN -->
+                <fieldset class="border p-2 mb-3">
+                    <legend class="float-none w-auto px-2 fw-bold small">
+                        Detalle Información
+                    </legend>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">Número</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="gcInfoNumero" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">Estado</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="gcEstado" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">F. Vence</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="gcVence" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">Monto</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="gcMonto" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">Utilizado</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="gcUtilizado" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">Disponible</label>
+                            <input type="text" class="form-control form-control-sm bg-light fw-bold" id="gcDisponible" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">F. Activación</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="gcActivacion" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">Tipo Doc</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="gcTipoDoc" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label mb-0 small">Número Doc.</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="gcNumDoc" readonly>
+                            <input type="text" class="form-control form-control-sm bg-light" id="Cod_Bodega" hidden>
+                            <input type="text" class="form-control form-control-sm bg-light" id="Id_Gift" hidden>
+                            <input type="text" class="form-control form-control-sm bg-light" id="Cod_Producto" hidden>
+                            <input type="text" class="form-control form-control-sm bg-light" id="ProductoGift" hidden>
+                            <input type="text" class="form-control form-control-sm bg-light" id="Descripcion" hidden>
+                            <input type="text" class="form-control form-control-sm bg-light" id="Cantidad" hidden>
+                            <input type="text" class="form-control form-control-sm bg-light" id="DetalleBol" hidden>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- BOTÓN USAR -->
+                <div class="d-grid mb-3">
+                    <button class="btn btn-secondary fw-bold" id="btnUsarGift">
+                        Usar GiftCard
+                    </button>
+                </div>
+
+                <!-- ÁREA MENSAJES / LOG -->
+                <div class="border bg-light" style="height:120px" id="gcLog"></div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+
+        // Esperar a que jQuery esté disponible
+        var comprobarJQuery = setInterval(function () {
+            if (window.jQuery) {
+                clearInterval(comprobarJQuery);
+                inicializarEventosCambio();
+            }
+        }, 100);
+
+        function inicializarEventosCambio() {
+
+            /* ===============================
+               BUSCAR GIFTCARD
+            =============================== */
+            $(document)
+            .off('click', '#btnBuscarGift')
+            .on('click', '#btnBuscarGift', function (e) {
+
+                e.preventDefault();
+
+                var $btn = $(this);
+                var codigo = $('#gcNumero').val();
+                var validador = $('#gcValidador').val();
+
+                if (!codigo || codigo === "0") {
+                    Swal.fire("Aviso", "Ingrese el número de Giftcard", "warning");
+                    return;
+                }
+
+                if (!validador || validador === "0") {
+                    Swal.fire("Aviso", "Ingrese el Validador de Giftcard", "warning");
+                    return;
+                }
+
+                $.ajax({
+                    url: '/PuntoVenta/ValidaGiftcard',
+                    type: 'GET',
+                    data: { codigo, validador },
+
+                    beforeSend: function () {
+                        $btn.prop('disabled', true).text('Buscando...');
+                    },
+
+                    success: function (response) {
+
+                        if (!response?.success || !response?.giftCard?.info) {
+                            Swal.fire("Aviso", response?.message || "GiftCard no válida", "info");
+                            return;
+                        }
+
+                        let info = response.giftCard.info;
+                        let detalle = response.giftCard.detalleCambio || {};
+
+                        // Normalizar estado
+                        let estado = (info.estado || '').trim().toUpperCase();
+                        let estadoTexto = estado === 'V' ? 'Disponible' : 'No disponible';
+
+                        // Fechas seguras
+                        let fechaVence = info.fVence ? info.fVence.split('T')[0] : '';
+                        let fechaAct = info.fecha_Activacion ? info.fecha_Activacion.split('T')[0] : '';
+                        console.log(response);
+                        // Cargar datos en el modal
+                        $('#gcInfoNumero').val(info.codigo_Barra || '');
+                        $('#gcEstado').val(estadoTexto);
+                        $('#gcVence').val(fechaVence);
+                        $('#gcMonto').val(info.monto || 0);
+                        $('#gcUtilizado').val(info.utilizado || 0);
+                        $('#gcDisponible').val(info.disponible || 0);
+                        $('#gcActivacion').val(fechaAct);
+                        $('#gcTipoDoc').val(info.tipo_Documento || '');
+                        $('#gcNumDoc').val(info.numero_Documento || '');
+
+                        // Detalle cambio
+                        $('#Cod_Bodega').val(detalle.cod_Bodega || '');
+                        $('#Id_Gift').val(detalle.id_GiftCard || '');
+                        $('#Cod_Producto').val(detalle.cod_Producto || '');
+                        $('#ProductoGift').val(detalle.codigo_Producto || '');
+                        $('#Descripcion').val(detalle.descripcion || '');
+                        $('#Cantidad').val(detalle.cantidad || 1);
+                        $('#DetalleBol').val(detalle.id_DetalleBoleta || '');
+
+                        // Habilitar / deshabilitar botón
+                        $('#btnUsarGift').prop('disabled', estado !== 'V');
+                    },
+
+                    error: function () {
+                        Swal.fire("Error", "No se pudo conectar con el servidor", "error");
+                    },
+
+                    complete: function () {
+                        $btn.prop('disabled', false).text('Buscar');
+                    }
+                });
+            });
+
+            /* ===============================
+               USAR GIFTCARD
+            =============================== */
+            $(document)
+            .off('click', '#btnUsarGift')
+            .on('click', '#btnUsarGift', function (e) {
+
+                e.preventDefault();
+
+                let codigoProd = $('#ProductoGift').val();
+                let descripcion = $('#Descripcion').val();
+                let monto = parseFloat($('#gcDisponible').val()) || 0;
+                let cantidad = $('#Cantidad').val() || 1;
+                let idDetalle = $('#DetalleBol').val();
+                let codBodega = $('#Cod_Bodega').val();
+                let idGift = $('#Id_Gift').val();
+                let cod_producto = $('#Cod_Producto').val();
+
+                let filaHtml = `
+                    <tr>
+                        <td class="text-center">CAMBIO</td>
+                        <td>${codigoProd}</td>
+                        <td>${descripcion}</td>
+                        <td class="text-end">${monto}</td>
+                        <td class="text-center">${cantidad}</td>
+                        <td class="text-end">0</td>
+                        <td class="text-end">${monto}</td>
+                        <td hidden>${idDetalle}</td>
+                        <td hidden>${cod_producto}</td>
+                        <td hidden>${idGift}</td>
+                    </tr>`;
+
+                $('#tbodyCambios').append(filaHtml);
+                console.log(filaHtml);
+                // Inputs del index
+                $('#tipoCambio').val('GIFT');
+                $('#numCambio').val($('#gcInfoNumero').val());
+                $('#pagoCambio').val(monto);
+
+                // Recalcular totales
+                  if (typeof actualizarTotalGeneral === 'function') {
+                    actualizarTotalGeneral();
+                }
+
+                // Cerrar modal (Bootstrap 5)
+                let modalEl = document.getElementById('modalGiftcard');
+                let modal = bootstrap.Modal.getInstance(modalEl);
+                modal?.hide();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'GiftCard aplicada',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            });
+        }
+
+    })();
+</script>
+

@@ -1,0 +1,596 @@
+﻿<div class="modal fade" id="modalCambio" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content win-window-style">
+
+            <div class="modal-header bg-success">
+                <h6 class="modal-title fw-bold text-dark">
+                    <span class="me-2">🔄</span> Cambio de Productos
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="font-size: 0.8rem;"></button>
+            </div>
+
+            <div class="modal-body win-body">
+                <fieldset class="win-fieldset">
+                    <legend>Busqueda de Documento</legend>
+                    <div class="win-row">
+                        <div class="win-field" style="flex:2">
+                            <label>Tipo Documento</label>
+                            <select class="win-input" id="tipoDoctoSelect">
+                                <option value="BLE">B-Electronica</option>
+                                <option value="BLV">Boleta</option>
+                                <option value="GDV">Guia Despacho - Factura</option>
+                                <option value="OPR">Operacion</option>
+                             </select>
+                        </div>
+                        <div class="win-field" style="flex:2">
+                            <label>Tipo Cambio</label>
+                            <select class="win-input" id="tipoDoc">
+                                <option value="CM">Cambio de Producto</option>
+                                <option value="PF">Producto con falla</option>
+                                </select>
+                        </div>
+                        <div class="win-field" style="flex:2">
+                            <label>Folio Documento</label>
+                            <input type="text" class="win-input" value="0" id="numDoc">
+                        </div>
+                        <div class="win-field" style="flex:1">
+                            <label>Validador</label>
+                            <input type="text" class="win-input" id="valDoc">
+                        </div>
+                        <div class="win-field" style="flex:1">
+                            <label>Laboratorio</label>
+                            <input type="text" class="win-input" style="background:#ddd;" id="labDoc" disabled>
+                        </div>
+                        <button class="win-btn-search" id="BuscarDocumento">🔍 Buscar</button>
+                    </div>
+                </fieldset>
+
+                <fieldset class="win-fieldset">
+                    <legend>Detalle Documento</legend>
+                    <div class="win-row">
+                        <div class="win-field" style="flex:1"><label>Rut</label><input type="text" id="det-rut" class="win-input readonly"></div>
+                        <div class="win-field" style="flex:4"><label>Razon Social</label><input type="text" id="det-cliente" class="win-input readonly"></div>
+                        <div class="win-field" style="flex:1.5"><label>Fecha Emisión</label><input type="date" id="det-fecha" class="win-input"></div>
+                        <div class="win-field" style="flex:2"><label>Vendedor</label><input type="text" id="det-vendedor" class="win-input readonly"></div>
+                    </div>
+                    <div class="win-row mt-2">
+                        <div class="win-field" style="flex:3"><label>Cajero</label><input type="text" id="det-cajero" class="win-input readonly"></div>
+                        <div class="win-field" style="flex:3"><label>Tienda</label><input type="text" id="det-tienda" class="win-input readonly"></div>
+                        <div class="win-field" style="flex:1.5"><label>Monto Total</label><input type="text" id="det-total" class="win-input readonly"></div>
+                        <input type="text"  id="idDocCambio" hidden />
+                    </div>
+                </fieldset>
+
+                <div class="win-table-container">
+                    <table class="table-win" id="tablaProductos">
+                        <thead>
+                            <tr>
+                                <th>Sel.</th>
+                                <th>Tipo</th>
+                                <th>Producto</th>
+                                <th>Descripción</th>
+                                <th>Precio</th>
+                                <th>Cant.</th>
+                                <th>Desc x Unidad</th>
+                                <th>Cambios</th>
+                                <th>Total</th>
+                                <th hidden>ID</th>
+                                <th hidden>Bod</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="win-footer-actions">
+                    <button class="win-btn" id="BtnLimpiarModal">📄 Limpiar</button>
+                    <button class="win-btn win-btn-success" id="BtnSeleccionar">✅ Seleccionar</button>
+                    <button class="win-btn" data-bs-dismiss="modal">❌ Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modalSeleccionDoc" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content win-modal">
+            <div class="win-modal-header">SELECCIONE DOCUMENTO</div>
+            <div class="modal-body">
+                <table class="table-win w-100" id="tablaDocsDuplicados">
+                    <thead>
+                        <tr>
+                            <th>Tienda</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="_ModalCantidad" />
+
+<script>
+    window.cambioActual = { cabecera: null, productos: [] }; // Definir globalmente
+
+     document.addEventListener("DOMContentLoaded", function () {
+        const tipoDoc = document.getElementById("tipoDoc");
+        const labDoc = document.getElementById("labDoc");
+
+        function actualizarEstadoInput() {
+            if (tipoDoc.value === "PF") {
+                labDoc.disabled = false;
+                labDoc.style.background = "#fff";
+            } else {
+                labDoc.disabled = true;
+                labDoc.value = "";
+                labDoc.style.background = "#ddd";
+            }
+        }
+
+        // Cambio de opción
+        tipoDoc.addEventListener("change", actualizarEstadoInput);
+
+        // Estado inicial
+        actualizarEstadoInput();
+    });
+
+    (function() {
+        // Validación de carga de jQuery
+        var comprobarJQuery = setInterval(function () {
+            if (window.jQuery) {
+                clearInterval(comprobarJQuery);
+                inicializarEventosCambio();
+            }
+        }, 100);
+
+        function inicializarEventosCambio() {
+            console.log("Sistema de Cambio Inicializado");
+
+            // 1. EVENTO BUSCAR DOCUMENTO
+            $(document).off('click', '#BuscarDocumento').on('click', '#BuscarDocumento', function (e) {
+                e.preventDefault();
+                var $btn = $(this);
+
+                var tipo = $('#tipoDoctoSelect').val();
+                var numero = $('#numDoc').val();
+                var validador = $('#valDoc').val();
+                var laboratorio = $('#labDoc').val();
+                var tipoCambio = $('#tipoDoc').val();
+
+                if(tipoCambio == "PF" & laboratorio == "" || laboratorio == 0){
+                    swal.fire("Aviso", "Debe ingresar un laboratorio valido", "warning");
+                    return;
+                }
+
+                if (!numero || numero === "0") {
+                    Swal.fire("Aviso", "Ingrese el número de documento", "warning");
+                    return;
+                }
+
+                $.ajax({
+                    url: '/PuntoVenta/ObtenerDocumentoCambio',
+                    type: 'GET',
+                    data: { tipo: tipo, numero: numero, validador: validador, lab: laboratorio, tipoCambio: tipoCambio },
+                    beforeSend: function() {
+                        $btn.prop('disabled', true).text('Buscando...');
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            if (response.multiple) {
+                                llenarModalSeleccion(response.datos, tipo, numero, validador, lab, tipoCambio);
+                            } else {
+                                renderizarDetalle(response);
+                            }
+                        } else {
+                            Swal.fire("Aviso", response.message, "info");
+                        }
+                    },
+                    error: function () {
+                        Swal.fire("Error", "No se pudo conectar con el servidor", "error");
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html('🔍 Buscar');
+                    }
+                });
+            });
+
+            // 2. EVENTO CHECKBOX (Activa el Modal de Cantidad)
+            $(document).off('change', '.chk-cambio').on('change', '.chk-cambio', function () {
+                var checkbox = this;
+                var $fila = $(checkbox).closest('tr');
+
+                if (!checkbox.checked) {
+                    $fila.find('.cant-cambio').text('0');
+                    return;
+                }
+
+                window.filaSeleccionadaActual = $fila; // Variable global para el contexto
+                let max = $fila.data('max');
+                let desc = $fila.find('.desc-prod-tabla').text(); // Clase específica para la descripción
+
+                // Llenar y mostrar modal
+                $('#maxCant').val(max);
+                $('#txtProductoModal').text(desc);
+                $('#inputCantidadCambio').val(max);
+
+                $('#modalCantidad').css('display', 'flex').hide().fadeIn(200);
+                setTimeout(() => $('#inputCantidadCambio').focus().select(), 100);
+            });
+
+            $(document).off('click', '#BtnLimpiarModal').on('click', '#BtnLimpiarModal', function() {
+                $('#numDoc, #valDoc').val('0');
+                $('#tipoDoctoSelect, #tipoDoc').prop('disabled', false).prop('selectedIndex', 0);
+                $('#tablaProductos tbody').empty();
+                $('.win-fieldset input').val('');
+                window.cambioActual = { cabecera: null, productos: [] };
+            });
+
+            $(document).off('click', '#BtnSeleccionar').on('click', '#BtnSeleccionar', function (e) {
+                e.preventDefault();
+                console.log("Procesando selección para el Index...");
+
+                if (!window.cambioActual.cabecera) {
+                    Swal.fire("Aviso", "Primero debe buscar y cargar un documento", "warning");
+                    return;
+                }
+
+                let totalCambio = 0;
+                let filasHtml = '';
+                let productosSeleccionados = 0;
+                let idDoc = window.cambioActual.cabecera.id_Doc;
+                let descuentoDoc = 0;
+
+                // Recorremos la tabla de la modal
+                $('#tablaProductos tbody tr').each(function () {
+                    const $fila = $(this);
+                    const cant = parseInt($fila.find('.cant-cambio').text()) || 0;
+                    const descuento = parseInt($fila.find('.descuento').text()) || 0;
+                    const id_DetalleBoleta = $fila.data('id');
+                    const descuentoFinal = descuento / cant;
+                    descuentoDoc += descuentoFinal * cant;
+
+                    if (cant > 0) {
+                        productosSeleccionados++;
+                        // Limpiamos el formato de moneda para operar (quita puntos y $)
+                        const precio = parseInt($fila.find('td:eq(4)').text().replace(/\D/g, '')) || 0;
+                        const subtotal = cant * (precio - descuento);
+                        totalCambio += subtotal;
+
+                        // Construimos la fila para la tabla del INDEX
+                        filasHtml += `
+                            <tr>
+                                <td class="text-center">CAMBIO</td>
+                                <td>${$fila.find('td:eq(2)').text()}</td>
+                                <td>${$fila.find('.desc-prod-tabla').text()}</td>
+                                <td class="text-end">${precio.toLocaleString('es-CL')}</td>
+                                <td class="text-center">${cant}</td>
+                                <td class="text-end">${descuento}</td>
+                                <td class="text-end">${subtotal.toLocaleString('es-CL')}</td>
+                                <td class="text-end" hidden>${id_DetalleBoleta}</td>
+                                <td class="text-end" hidden>${$fila.find('td:eq(9)').text()}</td>
+                                <td class="text-end" hidden>${$fila.find('td:eq(10)').text()}</td>
+                            </tr>`;
+                    }
+                });
+
+                if (productosSeleccionados === 0) {
+                    Swal.fire("Aviso", "Debe seleccionar al menos un producto con cantidad mayor a 0", "warning");
+                    return;
+                }
+               console.log(filasHtml);
+                // 🔹 ENVIAR A LOS INPUTS DEL INDEX
+                   $('#tipoCambio').val($('#tipoDoctoSelect').val());
+                   $('#numCambio').val($('#numDoc').val());
+                   $('#pagoCambio').val(totalCambio); // Se carga el monto como un "medio de pago"
+                   $('#tbodyCambios').html(filasHtml);
+                   $('#IdDoc').val(idDoc);
+
+                // 🔹 EJECUTAR CÁLCULOS EN EL INDEX
+                // Al llamar a esta función, el Index sumará sus productos y restará este pagoCambio
+                if (typeof actualizarTotalGeneral === 'function') {
+                    actualizarTotalGeneral();
+                }
+
+                // 🔹 CERRAR MODAL
+                $('#modalCambio').modal('hide');
+                setTimeout(function() {
+                    // Limpiar inputs de búsqueda
+                    $('#numDoc').val('0');
+                    $('#valDoc, #labDoc').val('');
+
+                    // Habilitar y resetear selects
+                    $('#tipoDoctoSelect, #tipoDoc').prop('disabled', false).prop('selectedIndex', 0);
+
+                    // Limpiar campos de detalle (Rut, Cliente, etc)
+                    $('.win-fieldset input').val('');
+
+                    // Vaciar la tabla de productos
+                    $('#tablaProductos tbody').empty();
+
+                    // Resetear la variable de estado global
+                    window.cambioActual = { cabecera: null, productos: [] };
+
+
+                    console.log("Modal limpiado y listo para nueva búsqueda.");
+                    }, 500);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Productos Cargados',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            });
+        }
+
+        // Función para llenar el modal de duplicados
+        function llenarModalSeleccion(lista, tipo, numero, val, lab) {
+            var filas = "";
+            lista.forEach(function(item) {
+                var idUnico = item.id_Doc || item.id_Boleta || item.id_GuiaDespacho;
+                filas += `<tr>
+                    <td>${item.tienda}</td>
+                    <td>${new Date(item.fEmision).toLocaleDateString('es-CL')}</td>
+                    <td>${new Intl.NumberFormat('es-CL').format(item.total)}</td>
+                    <td>
+                        <button class="win-btn-search btn-sm" onclick="seleccionarDocumentoFinal('${tipo}', ${numero}, '${idUnico}', '${val}', ${lab})">
+                            Seleccionar
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            $('#tablaDocsDuplicados tbody').html(filas);
+            $('#modalSeleccionDoc').modal('show');
+        }
+
+        // Función para renderizar cabecera y tabla de productos
+        window.renderizarDetalle = function (res) {
+        console.log('Respuesta del servidor:', res);
+        if (!res || !res.cabecera) {
+            Swal.fire('Error', 'No se recibió cabecera del documento', 'error');
+            return;
+        }
+        window.cambioActual.cabecera = res.cabecera;
+        window.cambioActual.productos = res.productos;
+        const cab = res.cabecera;
+
+        // ===== CABECERA =====
+        $('#det-rut').val(cab.rut ?? '');
+        $('#det-cliente').val(cab.cliente ?? '');
+        $('#det-fecha').val(cab.fechaEmision ?? cab.fEmision ?? '');
+        $('#det-vendedor').val(cab.vendedor ?? '');
+        $('#det-cajero').val(cab.cajero ?? '');
+        $('#det-tienda').val(cab.tienda ?? '');
+        $('#idDocCambio').val(cab.id_Doc);
+        console.log('Cabecera:', cab);
+        const totalCabecera = Number(cab.total) || 0;
+        $('#det-total').val(new Intl.NumberFormat('es-CL').format(totalCabecera));
+
+        // ===== DETALLE =====
+        const prods = Array.isArray(res.productos) ? res.productos : [];
+        console.log('Productos:', prods);
+
+        const $tbody = $('#tablaProductos tbody');
+        $tbody.empty();
+
+        prods.forEach(p => {
+
+            const cantidad = Number(p.cantidad) || 0;
+            const descuento = Number(p.descuento_Monto) || 0;
+            const precio = Number(p.precioUnitario ?? p.precio_Unitario) || 0;
+            const total = Number(p.total) || (cantidad * precio);
+            const descuentoFinal = descuento / cantidad;
+            
+
+            const fila = `
+            <tr data-id="${p.idDetalleBoleta ?? p.id_DetalleBoleta}"
+                data-max="${cantidad}">
+                <td class="text-center">
+                    <input type="checkbox" class="chk-cambio">
+                </td>
+                <td class="text-center">VEN</td>
+                <td>${p.codigo ?? ''}</td>
+                <td class="desc-prod-tabla">${p.descripcion ?? ''}</td>
+                <td class="text-right">${new Intl.NumberFormat('es-CL').format(precio)}</td>
+                <td class="text-center">${cantidad}</td>
+                <td class="text-center descuento">${descuentoFinal ?? 0}</td>
+                <td class="text-center cant-cambio" style="font-weight:bold;color:blue;">0</td>
+                <td class="text-right">${new Intl.NumberFormat('es-CL').format(total)}</td>
+                <td class="text-right" hidden>${p.cod_Producto}</td>
+                <td class="text-right" hidden>${p.cod_Bodega}</td>
+            </tr>`;
+
+            $tbody.append(fila);
+        });
+
+        // ===== BLOQUEOS =====
+        $('#tipoDoctoSelect').prop('disabled', true);
+        $('#tipoDoc').prop('disabled', true);
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Documento cargado',
+            timer: 1000,
+            showConfirmButton: false
+        });
+    };
+
+
+        window.seleccionarDocumentoFinal = function(tipo, numero, idDoc, val, lab) {
+            $('#modalSeleccionDoc').modal('hide');
+            $.ajax({
+                url: '/PuntoVenta/ObtenerDetalleFinal',
+                type: 'GET',
+                data: { tipo: tipo, numero: numero, idDoc: idDoc, validador: val, laboratorio: lab },
+                success: function (response) {
+                    if (response.success) renderizarDetalle(response);
+                    else Swal.fire("Error", response.message, "error");
+                }
+            });
+        };
+    })();
+
+    // FUNCIONES GLOBALES DEL MODAL DE CANTIDAD
+    function confirmarCambio() {
+        let cant = parseInt($('#inputCantidadCambio').val());
+        let max = parseInt($('#maxCant').val());
+
+        if (isNaN(cant) || cant <= 0) {
+            Swal.fire("Error", "Ingrese una cantidad válida", "error");
+            return;
+        }
+        if (cant > max) {
+            Swal.fire("Exceso", "No puede superar el máximo de " + max, "warning");
+            return;
+        }
+
+        if (window.filaSeleccionadaActual) {
+            window.filaSeleccionadaActual.find('.cant-cambio').text(cant);
+        }
+        $('#modalCantidad').fadeOut(200);
+    }
+
+    function cancelarModalCant() {
+        if (window.filaSeleccionadaActual && window.filaSeleccionadaActual.find('.cant-cambio').text() == "0") {
+            window.filaSeleccionadaActual.find('.chk-cambio').prop('checked', false);
+        }
+        $('#modalCantidad').fadeOut(200);
+    }
+
+    // Listener para el Enter en el input de cantidad
+    $(document).on('keypress', '#inputCantidadCambio', function(e) {
+        if(e.which == 13) {
+            e.preventDefault();
+            confirmarCambio();
+        }
+    });
+</script>
+
+<style>
+    /* Ajustes para que el modal parezca ventana de Windows */
+    .win-window-style {
+        background-color: #f0f0f0 !important;
+        border: 1px solid #777 !important;
+        border-radius: 4px !important;
+    }
+
+    .win-body {
+        padding: 15px;
+    }
+
+    /* Estilo de Fieldset (Igual a la imagen) */
+    .win-fieldset {
+        border: 1px solid #bbb !important;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        padding: 10px;
+        position: relative;
+    }
+
+        .win-fieldset legend {
+            font-size: 12px;
+            font-weight: bold;
+            width: auto !important;
+            margin: 0;
+            padding: 0 5px;
+            float: none;
+            color: #333;
+        }
+
+    /* Layout de filas e inputs */
+    .win-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+    }
+
+    .win-field {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .win-field label {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+    .win-input {
+        padding: 3px 5px;
+        border: 1px solid #ccc;
+        font-size: 12px;
+        height: 26px;
+        outline: none;
+    }
+
+    /* Color azul de la imagen para campos bloqueados */
+    .readonly {
+        background-color: #b4c7e7 !important;
+        border: 1px solid #8da9d6 !important;
+    }
+
+    /* Botón Buscar */
+    .win-btn-search {
+        padding: 2px 15px;
+        background: #fff;
+        border: 1px solid #aaa;
+        font-size: 12px;
+        height: 26px;
+        cursor: pointer;
+    }
+
+    /* Tabla estilo Grid de escritorio */
+    .win-table-container {
+        background: #fff;
+        border: 1px solid #bbb;
+        height: 180px;
+        overflow-y: auto;
+        margin-top: 10px;
+    }
+
+    .table-win {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+    }
+
+        .table-win th {
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+            padding: 5px;
+            position: sticky;
+            top: 0;
+        }
+
+        .table-win td {
+            border: 1px solid #eee;
+            height: 22px;
+            padding: 2px 5px;
+        }
+
+    /* Botones de acción inferiores */
+    .win-footer-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .win-btn {
+        padding: 5px 20px;
+        border: 1px solid #aaa;
+        background: #fff;
+        border-radius: 3px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+        .win-btn:hover {
+            background: #e9e9e9;
+        }
+</style>

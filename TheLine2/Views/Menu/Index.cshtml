@@ -1,0 +1,160 @@
+﻿@model IEnumerable<TheLine2.Models.MenuListaViewModel>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Gestión de Menús y Submenús</h2>
+        <button type="button" class="btn btn-primary" onclick="abrirModalCrear()">
+            <i class="bi bi-plus-circle me-2"></i> Nuevo Item
+        </button>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Icono</th>
+                        <th>Ruta</th>
+                        <th>Tipo</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr class="@(item.EsSubmenu ? "table-light" : "fw-bold table-secondary")">
+                            <td>
+                                @if (item.EsSubmenu)
+                                {
+                                    <span class="ms-4 text-muted"> <i class="bi bi-arrow-return-right me-2"></i> @item.Descripcion</span>
+                                }
+                                else
+                                {
+                                    <span><i class="bi bi-folder2-open me-2"></i> @item.Descripcion</span>
+                                }
+                            </td>
+                            <td><i class="@item.Icono"></i> <small>@item.Icono</small></td>
+                            <td>
+                                @(item.EsSubmenu ? $"{item.Controller}/{item.Action}" : "---")
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill @(item.EsSubmenu ? "bg-primary" : "bg-dark")">
+                                    @(item.EsSubmenu ? "Submenú" : "Principal")
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                <button onclick="eliminar('@item.Id')" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCrear" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Crear Nuevo Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrear">
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" class="form-control" name="Descripcion" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Icono (Bootstrap Icons)</label>
+                        <input type="text" class="form-control" name="Icono" placeholder="bi-gear" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Item</label>
+                        <select class="form-select" id="EsSubmenu" name="EsSubmenu" onchange="toggleRuta()">
+                            <option value="false">Menú Principal</option>
+                            <option value="true">Submenú</option>
+                        </select>
+                    </div>
+
+                    <div id="rutaFields" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Pertenece al Menú:</label>
+                            <select class="form-select" name="SelectedMenuId">
+                                @foreach (var parent in Model.Where(x => !x.EsSubmenu))
+                                {
+                                    <option value="@parent.Id">@parent.Descripcion</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Controller</label>
+                            <input type="text" class="form-control" name="Controller" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Action</label>
+                            <input type="text" class="form-control" name="Action" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function abrirModalCrear() {
+            var myModal = new bootstrap.Modal(document.getElementById('modalCrear'));
+            myModal.show();
+        }
+
+        function toggleRuta() {
+            var esSubmenu = document.getElementById('EsSubmenu').value === 'true';
+            document.getElementById('rutaFields').style.display = esSubmenu ? 'block' : 'none';
+        }
+
+        $(document).ready(function () {
+            $('#btnGuardar').on('click', function () {
+                var $btn = $(this);
+                var formData = $('#formCrear').serialize();
+
+                $btn.prop('disabled', true).text('Guardando...');
+
+                $.ajax({
+                    url: '@Url.Action("SaveMenu", "Menu")', // Nombre del controlador corregido
+                    type: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        if (response.success) {
+                            $('#modalCrear').modal('hide');
+                            Swal.fire("¡Éxito!", "Guardado correctamente", "success").then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire("Error", response.message, "error");
+                            $btn.prop('disabled', false).text('Guardar');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+<style>
+    .table-secondary {
+        border-left: 5px solid #212529;
+    }
+
+    .table-light {
+        border-left: 5px solid #0dcaf0;
+    }
+</style>

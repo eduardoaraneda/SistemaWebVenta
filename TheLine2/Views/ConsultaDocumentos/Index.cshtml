@@ -1,0 +1,359 @@
+﻿@{
+    ViewData["Title"] = "Documento(C)";
+}
+
+<style>
+    /* Ajustes visuales para que las tablas se vean ordenadas */
+    #pnlProductos, #pnlPagos {
+        border: 1px solid #dee2e6;
+    }
+
+        #pnlProductos .table thead th,
+        #pnlPagos .table thead th {
+            white-space: nowrap;
+        }
+
+        #pnlProductos .table tbody td,
+        #pnlPagos .table tbody td {
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+    /* Que el sticky-top se vea bien dentro del scroll */
+    .sticky-top {
+        z-index: 2;
+    }
+</style>
+
+<div class="container-fluid">
+
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="row align-items-end g-2">
+
+                <div class="col-auto">
+                    <div class="fw-semibold">Documento(C)</div>
+                </div>
+
+                <div class="col-auto">
+                    <label class="form-label mb-0 small">Tipo</label>
+                    <select class="form-select form-select-sm" id="TipoDocumento" style="min-width: 200px;">
+                        <option value="BLV">Boleta</option>
+                        <option value="BLE">B-Electronica</option>
+                        <option value="FCV">Factura Venta</option>
+                        <option value="FVE">Factura Exenta</option>
+                        <option value="GDV">Guia Despacho</option>
+                        <option value="GRC">Guia Recepcion</option>
+                        <option value="VCH">Voucher</option>
+                        <option value="XML">XML Recepcion</option>
+                        <option value="OPR">Operacion</option>
+                        <option value="NCV">NCV-Electronica</option>
+                        <option value="ECO">Pedido ECO</option>
+                        <option value="SOL">Solicitud</option>
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <label class="form-label mb-0 small">Numero</label>
+                    <input type="number" class="form-control form-control-sm text-end" id="NumeroDocumento" value="0" style="width: 120px;" />
+                </div>
+
+                <div class="col-auto">
+                    <button type="button" class="btn btn-sm btn-primary" id="btnBuscar">Buscar</button>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <span class="small fw-semibold">Datos Documento</span>
+            <span id="txtEstadoDoc" class="badge bg-info">Esperando búsqueda</span>
+        </div>
+
+        <div class="card-body">
+
+            <div id="pnlCabecera" class="border rounded mb-3 p-2 bg-light" style="min-height: 70px;">
+                <div class="text-center text-muted small mt-3">Información de cabecera</div>
+            </div>
+
+            <!-- PRODUCTOS -->
+            <div class="mb-3">
+                <div class="small fw-semibold mb-1">Detalle Productos</div>
+                <div id="pnlProductos" class="rounded overflow-auto bg-white" style="height: 400px;">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover table-striped mb-0" id="tablaDetalleFinal">
+                            <thead class="table-dark sticky-top">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Talla</th>
+                                    <th>Código</th>
+                                    <th>GPC</th>
+                                    <th class="text-end">Cant.</th>
+                                    <th class="text-end">Precio Unidad</th>
+                                    <th class="text-end">Descuento</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">Cambios</th>
+                                    <th class="text-end">TipoMov</th>
+                                    <th class="text-end">NumeroCambio</th>
+                                    <th class="text-end">FechaCambio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="12" class="text-center text-muted py-3">No hay productos cargados</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGOS -->
+            <div class="mb-3">
+                <div class="small fw-semibold mb-1">Pagos</div>
+                <div id="pnlPagos" class="rounded overflow-auto bg-white" style="height:200px">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover table-striped mb-0" id="tablaPagos">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>Tipo de Pago</th>
+                                    <th class="text-end">Monto</th>
+                                    <th class="text-end">Cuotas</th>
+                                    <th class="text-end">Numero</th>
+                                    <th class="text-end">Autoriza</th>
+                                    <th class="text-end">Banco/Tarjeta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="6" class="text-center text-muted py-3">No hay pagos cargados</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOTALES -->
+            <div id="pnlTotales" class="border rounded p-2 bg-light">
+                <div class="row justify-content-end">
+                    <div class="col-auto">
+                        <span class="fw-bold">TOTAL: </span>
+                        <span id="lblTotalFinal" class="fs-5">$ 0</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between mt-3">
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnTimbre">Timbre SII</button>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-success" id="btnNC">Nota de Crédito</button>
+            <button type="button" class="btn btn-sm btn-info" id="btnImpElec">Imp Elec</button>
+            <button type="button" class="btn btn-sm btn-warning" id="btnLimpiar">Limpiar</button>
+            <button type="button" class="btn btn-sm btn-danger" id="btnCerrar">Cerrar</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="modalSeleccionDoc" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Documentos Encontrados</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Se encontraron varios registros con el mismo número. Seleccione el correcto:</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover border" id="tablaDocsDuplicados">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tienda</th>
+                                <th>Fecha Emisión</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            function showModalById(id) {
+                const el = document.getElementById(id);
+                if (window.bootstrap) bootstrap.Modal.getOrCreateInstance(el).show();
+                else $(el).modal('show');
+            }
+
+            function hideModalById(id) {
+                const el = document.getElementById(id);
+                if (window.bootstrap) {
+                    const m = bootstrap.Modal.getInstance(el);
+                    if (m) m.hide();
+                } else $(el).modal('hide');
+            }
+
+            $(document).on('click', '#btnBuscar', function (e) {
+                e.preventDefault();
+                const tipo = $('#TipoDocumento').val();
+                const numero = $('#NumeroDocumento').val();
+
+                if (!numero || numero == "0") {
+                    Swal.fire("Error", "Ingrese un número válido", "warning");
+                    return;
+                }
+
+                $.ajax({
+                    url: '/ConsultaDocumentos/ConsultarDocumento',
+                    type: 'GET',
+                    data: { tipo, numero },
+                    success: function (response) {
+                        if (!response?.success) {
+                            Swal.fire("Aviso", response?.message || "Sin resultados", "info");
+                            return;
+                        }
+
+                        if (response.multiple && Array.isArray(response.datos)) {
+                            llenarModalSeleccion(response.datos, tipo, numero);
+                            showModalById("modalSeleccionDoc");
+                        } else {
+                            renderizarDetalle(response);
+                        }
+                    }
+                });
+            });
+
+            function llenarModalSeleccion(lista, tipo, numero) {
+                let filas = "";
+                lista.forEach(item => {
+                    const idUnico = item.id_Doc || item.id_Boleta || item.id_GuiaDespacho || "";
+                    const codTienda = item.cod_Tienda || "";
+
+                    filas += `<tr>
+                        <td>${item.tienda ?? ''}</td>
+                        <td>${item.fEmision ? new Date(item.fEmision).toLocaleDateString('es-CL') : ''}</td>
+                        <td class="text-end">$${new Intl.NumberFormat('es-CL').format(item.total ?? 0)}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-primary btnSeleccionarDoc"
+                                    data-tipo="${tipo}"
+                                    data-numero="${numero}"
+                                    data-iddoc="${idUnico}"
+                                    data-codtienda="${codTienda}">
+                                Seleccionar
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+
+                $('#tablaDocsDuplicados tbody').html(filas);
+            }
+
+            $(document).on('click', '.btnSeleccionarDoc', function () {
+                const btn = $(this);
+                const params = {
+                    tipo: btn.data('tipo'),
+                    numero: btn.data('numero'),
+                    idDoc: btn.data('iddoc'),
+                    CodTienda: btn.data('codtienda')
+                };
+
+                $.ajax({
+                    url: '/ConsultaDocumentos/ObtenerDetalleFinal',
+                    type: 'GET',
+                    data: params,
+                    success: function (resp) {
+                        if (resp?.success) {
+                            renderizarDetalle(resp);
+                            hideModalById("modalSeleccionDoc");
+                        } else {
+                            Swal.fire("Error", resp?.message || "No se pudo cargar el detalle", "error");
+                        }
+                    }
+                });
+            });
+
+            function renderizarDetalle(resp) {
+                const data = resp.datos || resp;
+                const cab = data.cabecera || {};
+                const productos = data.productos || [];
+                const pagos = data.pagos || [];
+
+                $('#CodigoDocumento').text(cab.codigo || '---');
+                $('#txtEstadoDoc').text(cab.estado || 'OK');
+
+                $('#pnlCabecera').html(`
+                    <div class="row small g-2">
+                        <div class="col-md-4"><b>Tienda:</b> ${cab.tienda ?? ''}</div>
+                        <div class="col-md-4"><b>Tipo:</b> ${cab.td ?? ''}</div>
+                        <div class="col-md-4"><b>Numero:</b> ${cab.numero ?? ''}</div>
+                        <div class="col-md-4"><b>Cliente:</b> ${cab.cliente || 'Público General'}</div>
+                        <div class="col-md-4"><b>Vendedor:</b> ${cab.vendedor || 'N/A'}</div>
+                        <div class="col-md-4"><b>Cajero:</b> ${cab.cajero || 'N/A'}</div>
+                        <div class="col-md-4"><b>Fecha:</b> ${cab.fEmision || '-'}</div>
+                    </div>
+                `);
+
+                // Productos
+                let filasProd = "";
+                if (productos.length > 0) {
+                    productos.forEach(p => {
+                        filasProd += `<tr>
+                            <td>${p.producto ?? ''}</td>
+                            <td>${p.talla ?? ''}</td>
+                            <td>${p.codigo ?? ''}</td>
+                            <td>${p.gpc ?? ''}</td>
+                            <td class="text-end">${p.cantidad ?? 0}</td>
+                            <td class="text-end">$${new Intl.NumberFormat('es-CL').format(p.pUnidad ?? 0)}</td>
+                            <td class="text-end">$${new Intl.NumberFormat('es-CL').format(p.descValor ?? 0)}</td>
+                            <td class="text-end">$${new Intl.NumberFormat('es-CL').format(p.total ?? 0)}</td>
+                            <td class="text-end">${p.cambios ?? ''}</td>
+                            <td class="text-end">${p.tMov ?? ''}</td>
+                            <td class="text-end">${p.numCambio ?? ''}</td>
+                            <td class="text-end">${p.fEmision ?? ''}</td>
+                        </tr>`;
+                    });
+                } else {
+                    filasProd = '<tr><td colspan="12" class="text-center text-muted py-3">Sin productos</td></tr>';
+                }
+                $('#tablaDetalleFinal tbody').html(filasProd);
+
+                // Pagos
+                let filasPagos = "";
+                if (pagos.length > 0) {
+                    pagos.forEach(p => {
+                        filasPagos += `<tr>
+                            <td>${p.tPago ?? ''}</td>
+                            <td class="text-end">$${new Intl.NumberFormat('es-CL').format(p.monto ?? 0)}</td>
+                            <td class="text-end">${p.cuo ?? ''}</td>
+                            <td class="text-end">${p.numero ?? ''}</td>
+                            <td class="text-end">${p.autoriza ?? ''}</td>
+                            <td class="text-end">${p.tarjeta ?? ''}</td>
+                        </tr>`;
+                    });
+                } else {
+                    filasPagos = '<tr><td colspan="6" class="text-center text-muted py-3">Sin pagos</td></tr>';
+                }
+                $('#tablaPagos tbody').html(filasPagos);
+
+                $('#lblTotalFinal').text(`$ ${new Intl.NumberFormat('es-CL').format(cab.total || 0)}`);
+            }
+
+            $('#btnLimpiar').click(function(){
+                location.reload();
+            });
+
+        });
+    </script>
+}
